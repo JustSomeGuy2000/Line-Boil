@@ -65,7 +65,14 @@ enum class attribute
     DUMMY_LAST,
 };
 typedef std::map<attribute, int> attrmap;
+/**
+ * @returns An attribute map with eevry attribute set to zero.
+ */
 attrmap default_attrmap();
+/**
+ * @param to_start Incomplete map of attributes to convert into a full map
+ * @returns An attribute map with every attribute set to zero except those specified in to_start. Those take their values in to_start,
+ */
 attrmap make_attrmap(attrmap to_start = default_attrmap());
 
 /**
@@ -107,7 +114,16 @@ public:
      */
     static void init();
     static item *instance();
+    /**
+     * Supplier of unique identifiers. Internal counter increments by one each time it is called.
+     *
+     * @returns Current value of the counter.
+     */
     static int counter();
+    /**
+     * Register a list of items, terminated by a null pointer, into the item registry.
+     * @param instance Variadic list of items ending with a null pointer.
+     */
     static void registrate(item *instance, ...);
     /**
      * Retrieve an item from the registry according to its id. Returns the base Orb if the id is not found.
@@ -116,13 +132,29 @@ public:
      * @returns Pointer to item instance, or pointer to Orb if not found.
      */
     static item *retrieve(int id);
-
+    /**
+     * Deal damage to a target and execute any additional item-specific on atatck effects.
+     *
+     * @param game_obj Access to the game.
+     * @param user The entity wielding this.
+     * @param target The entity to damage.
+     * @param damage Damage modifier, to add to the internal damage value of this.
+     * @returns Whether the target died.
+     */
     virtual bool attack(game *game_obj, entity *user, entity *target, int damage);
+    /**
+     * Things to do when consumed.
+     *
+     * @param owner Entity to apply the consume effects onto.
+     */
     virtual void consume(entity *owner);
 
     virtual ~item();
 };
 
+/**
+ * JSON keys for the item stack class.
+ */
 struct item_stack_schema
 {
     const string contains = "contains"; // id (int), -1 if null
@@ -145,6 +177,9 @@ class item_stack final
     item *contains;
     int count;
 
+    /**
+     * Regenerate this's tooltip.
+     */
     void regenerate();
 
 public:
@@ -157,10 +192,27 @@ public:
     item_stack(drawing_options draw_opts, point_2d loc);
     item_stack(item *contains, int count, drawing_options draw_opts, point_2d loc);
 
+    /**
+     * Make all changes to the stack's state based on the game's state.
+     *
+     * @param game_object A pointer giving access to the game.
+     * @returns Whether and how this has been clicked.
+     */
     item_update_result update(game *game_obj);
+    /**
+     * Display this to the current window.
+     *
+     * @param game_object A pointer giving access to the game.
+     */
     void render(game *game_obj);
     item *get_contains();
     int get_count();
+    /**
+     * Change the itema nd count of this.
+     *
+     * @param contains Item to switch to.
+     * @param count Amount to switch to.
+     */
     void alter(item *contains, int count);
     /**
      * Increase the count of this stack, as long as the final value is valid (between 0 and `item.max`, inclusive).
@@ -195,9 +247,20 @@ public:
      */
     void burn();
 
+    /**
+     * @returns If the item stack is empty (count is 0 or contains is nullptr).
+     */
     bool is_empty();
 
+    /**
+     * @returns A JSON object representing this item stack that can be loaded with `load`.
+     */
     json save();
+    /**
+     * Set this stack's state according to a JSON object that conforms to the stack schema.
+     *
+     * @param from The JSON object to load from.
+     */
     void load(json from);
 
     ~item_stack();
