@@ -52,5 +52,8 @@ BITMAP, glorngus_greatsword_0, glorngus_greatsword_0.png
 BITMAP, glorngus_evolved_0, glorngus_evolved_0.png
 BITMAP, felknight_0, felknight_0.png
 BITMAP, felknight_greatsword_0, felknight_greatsword_0.png
+BITMAP, felknight_stechhelm_0, felknight_stechhelm_0.png
+BITMAP, felknight_chestplate_0, felknight_chestplate_0.png
+BITMAP, felknight_glove_0, felknight_glove_0.png
 FONT, font_bold, Unkempt-Bold.ttf
 FONT, font_reg, Unkempt-Regular.ttf

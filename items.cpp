@@ -42,7 +42,7 @@ item::item(string name, int max, item_type type, string sprite, string desc, att
 void item::init()
 {
     item::registry.clear();
-    item::registrate(item::instance(), coin, dagger, basic_staff, pike, shovel, nightwatch_lantern::instance(), shotgun, felknight_greatsword, glorngus_claymore::instance(), nullptr);
+    item::registrate(item::instance(), coin, dagger, basic_staff, pike, shovel, nightwatch_lantern::instance(), shotgun, felknight_greatsword, glorngus_claymore::instance(), felknight_stechhelm, felknight_chestplate, felknight_glove, nullptr);
 }
 
 item *item::instance()
@@ -366,4 +366,10 @@ bool glorngus_claymore::attack(game *game_obj, entity *user, entity *target, int
         return item::attack(game_obj, user, target, damage);
     }
 }
+
+item *felknight_stechhelm = new item("Felknight's Stechhelm", 1, item_type::ACCESSORY, "felknight_stechhelm_0", "The Felknight's impenetrable helmet.", default_attrmap(), make_attrmap({{attribute::MELEE_DEF, 20}}));
+
+item *felknight_chestplate = new item("Felknight's Chestplate", 1, item_type::ACCESSORY, "felknight_chestplate_0", "The Felknight's trusty chestplate.", default_attrmap(), make_attrmap({{attribute::MELEE_DEF, 30}, {attribute::BOIL_DEFENSE, -10}}));
+
+item *felknight_glove = new item("Felknight's Glove", 1, item_type::ACCESSORY, "felknight_glove_0", "The Felknight's unscathed glove.", default_attrmap(), make_attrmap({{attribute::MELEE_DEF, 5}, {attribute::MELEE_DMG, 3}}));
 #pragma endregion

@@ -473,13 +473,13 @@ void game::back()
 
 void game::spawn_enemies()
 {
-    int target = 5 + 10 * this->layer;
+    int target = 5 + 5 * this->layer;
     int current_x = 50;
     // this->enemies.add(new felknight(point_at(current_x, 140)));
 
     while (target > 0)
     {
-        double value = rnd(); // There is a chance this falls out of range (since the distribution has an infinite tail), but then it just reruns. This is also unlikely to happen in earlier level due to limited precision.
+        double value = rnd(); // There is a chance this falls out of range (since the distribution has an infinite tail), but then it just reruns. This is also unlikely to happen in earlier levels due to limited precision.
         for (const auto &[bucket_max, list] : enemy::buckets)
         {
             double prob = cndf(bucket_max, (this->layer + 0.5) * enemy::BUCKET_WIDTH, enemy::STDEV);
@@ -773,6 +773,7 @@ void game::clear()
 
 void game::reset()
 {
+    this->layer = -1;
     this->player_object = new player();
     this->populate_ground();
     this->generate_map();

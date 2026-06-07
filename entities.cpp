@@ -392,15 +392,15 @@ player::player() : entity("You", "lower_boil1_0", option_scale_bmp(0.81, 0.81), 
     this->large_slot_opts = option_scale_bmp(1.15, 1.15);
     this->small_slot_opts = option_scale_bmp(0.85, 0.85);
 
-    this->max_hp = 1000;
-    this->current_hp = 1000;
+    this->max_hp = 200;
+    this->current_hp = 200;
     this->max_mana = 100;
     this->current_mana = 100;
-    this->max_boil = 1000;
+    this->max_boil = 100;
     this->current_boil = 0;
     this->mana_regen = 10;
     this->inv = fixed_array<item_stack *, 20>();
-    this->inv[(int)inv_slot::MELEE] = new item_stack(felknight_greatsword, 1, this->large_slot_opts, this->melee_slot);
+    this->inv[(int)inv_slot::MELEE] = new item_stack(dagger, 1, this->large_slot_opts, this->melee_slot);
     this->inv[(int)inv_slot::RANGED] = new item_stack(basic_staff, 1, this->large_slot_opts, this->ranged_slot);
     for (int i = 0; i < 3; i++)
     {
@@ -410,6 +410,8 @@ player::player() : entity("You", "lower_boil1_0", option_scale_bmp(0.81, 0.81), 
     {
         this->inv[(int)inv_slot::STORAGE + i] = new item_stack(this->small_slot_opts, point_at(this->inv_anchor.x + this->inv_x_gap * (i % 5), this->inv_anchor.y + this->inv_y_gap * (i / 5)));
     }
+    // delete this->inv[(int)inv_slot::STORAGE];
+    // this->inv[(int)inv_slot::STORAGE] = new item_stack(felknight_chestplate, 1, this->small_slot_opts, point_at(this->inv_anchor.x + this->inv_x_gap * (0 % 5), this->inv_anchor.y + this->inv_y_gap * (0 / 5)));
     this->sync_attributes();
 }
 
@@ -509,7 +511,7 @@ void player::attack(game *game_obj, enemy *target, inv_slot slot)
 std::pair<bool, int> player::take_damage(game *game_obj, entity *origin, int damage, attribute res_type)
 {
     auto dead = entity::take_damage(game_obj, origin, damage, res_type);
-    int plus_boil = origin->attributes[attribute::BOIL_INCREASE] * (1 - this->attributes[attribute::BOIL_DEFENSE]);
+    int plus_boil = origin->attributes[attribute::BOIL_INCREASE] * (1 - ((float)this->attributes[attribute::BOIL_DEFENSE]) / 100.0);
     this->current_boil += plus_boil;
     if (this->current_boil >= this->max_boil)
     {
@@ -756,7 +758,7 @@ void dagger_man::drop(game *game_obj)
     game_obj->drop(this->weapon);
 }
 
-recruit::recruit(point_2d loc) : enemy("Recruit", "recruit_0", option_scale_bmp(0.6, 0.6), loc, 14, 15, 35, 10, make_attrmap({{attribute::BOIL_INCREASE, 10}, {attribute::BOIL_REDUCTION, 30}, {attribute::MELEE_DEF, 30}}))
+recruit::recruit(point_2d loc) : enemy("Recruit", "recruit_0", option_scale_bmp(0.6, 0.5), loc, 14, 12, 30, 10, make_attrmap({{attribute::BOIL_INCREASE, 10}, {attribute::BOIL_REDUCTION, 30}, {attribute::MELEE_DEF, 20}}))
 {
     this->weapon->alter(pike, 1);
     this->sync_attributes();
@@ -774,7 +776,7 @@ glorngus::glorngus(point_2d loc) : enemy("Glorngus", "glorngus_0", option_scale_
     this->sync_attributes();
 }
 
-gravedigger::gravedigger(point_2d loc) : enemy("Gravedigger", "gravedigger_0", option_scale_bmp(0.6, 0.6), loc, 14, 25, 50, 20, make_attrmap({{attribute::BOIL_INCREASE, 15}, {attribute::BOIL_REDUCTION, 30}}))
+gravedigger::gravedigger(point_2d loc) : enemy("Gravedigger", "gravedigger_0", option_scale_bmp(0.6, 0.6), loc, 12, 25, 50, 20, make_attrmap({{attribute::BOIL_INCREASE, 15}, {attribute::BOIL_REDUCTION, 30}}))
 {
     this->weapon->alter(shovel, 1);
     this->sync_attributes();
@@ -850,7 +852,7 @@ glorngus_evolved::glorngus_evolved(point_2d loc) : enemy("Glorngus Evolved", "gl
     this->sync_attributes();
 }
 
-felknight::felknight(point_2d loc) : enemy("Felknight", "felknight_0", option_scale_bmp(0.5, 0.5), loc, 50, 50, 80, 40, make_attrmap({{attribute::MELEE_DEF, 33}, {attribute::RANGED_DEF, 33}, {attribute::BOIL_INCREASE, 15}, {attribute::BOIL_REDUCTION, 40}}))
+felknight::felknight(point_2d loc) : enemy("Felknight", "felknight_0", option_scale_bmp(0.5, 0.5), loc, 50, 50, 80, 40, make_attrmap({{attribute::MELEE_DEF, 33}, {attribute::RANGED_DEF, 33}, {attribute::BOIL_INCREASE, 12}, {attribute::BOIL_REDUCTION, 40}}))
 {
     this->weapon->alter(felknight_greatsword, 1);
     this->sync_attributes();
@@ -862,7 +864,7 @@ void felknight::drop(game *game_obj)
     game_obj->drop(this->weapon);
 }
 
-glorngus_ex::glorngus_ex(point_2d loc) : enemy("Glorngus EX", "glorngus_ex_0", option_scale_bmp(0.6, 0.6), loc, 50, 40, 75, 45, make_attrmap({{attribute::MELEE_DEF, 50}, {attribute::RANGED_DEF, 25}, {attribute::BOIL_INCREASE, 20}, {attribute::BOIL_REDUCTION, 100}}))
+glorngus_ex::glorngus_ex(point_2d loc) : enemy("Glorngus EX", "glorngus_ex_0", option_scale_bmp(0.6, 0.6), loc, 50, 40, 75, 45, make_attrmap({{attribute::MELEE_DEF, 50}, {attribute::RANGED_DEF, 25}, {attribute::BOIL_INCREASE, 15}, {attribute::BOIL_REDUCTION, 100}}))
 {
     this->weapon->alter(glorngus_claymore::instance(), 1);
     this->sync_attributes();

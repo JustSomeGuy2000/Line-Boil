@@ -229,3 +229,6 @@ public:
     static glorngus_claymore *instance();
     bool attack(game *game_obj, entity *user, entity *target, int damage) override;
 };
+extern item *felknight_stechhelm;
+extern item *felknight_chestplate;
+extern item *felknight_glove;
