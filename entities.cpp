@@ -330,7 +330,6 @@ void player::handle_item_update(item_update_result result, int pos, game *game_o
     switch (result)
     {
     case item_update_result::LCLICK:
-        game_obj->cur_mouse_left = false; // Avoid triggering other stacks, since they are moved in the same frame.
         switch (stack->get_contains()->type)
         {
         case item_type::CONSUMABLE:
