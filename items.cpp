@@ -298,6 +298,7 @@ void item_stack::load(json from)
     this->draw_opts = option_scale_bmp(json_read_number_as_double(from, item_stack::schema.scale_x), json_read_number_as_double(from, item_stack::schema.scale_y));
     this->loc = point_at(json_read_number_as_int(from, item_stack::schema.x), json_read_number_as_int(from, item_stack::schema.y));
     this->hitbox = rectangle_from(this->loc, 50 * this->draw_opts.scale_x, 50 * this->draw_opts.scale_y);
+    this->regenerate();
 }
 
 item_stack::~item_stack()

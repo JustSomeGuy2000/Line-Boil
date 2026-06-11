@@ -96,6 +96,16 @@ void chest::update(game *game_obj)
     }
 }
 
+json chest::save()
+{
+    json save = create_json();
+    return save;
+}
+
+void chest::load(json from)
+{
+}
+
 chest::~chest()
 {
     delete this->on_hover;
@@ -103,6 +113,8 @@ chest::~chest()
 #pragma endregion
 
 #pragma region merchant
+merchant_schema merchant::schema{};
+
 merchant::merchant() : npc("Joash", "merchant", option_scale_bmp(0.7, 0.7), point_at(100, 75))
 {
     std::function<color(void)> text_colour = []()
@@ -150,6 +162,40 @@ void merchant::update(game *game_obj)
             }
         }
         this->wares[i].second->update(game_obj);
+    }
+}
+
+json merchant::save()
+{
+    json save = create_json();
+
+    std::vector<json> ware_jsons;
+    for (int i = 0; i < this->wares.length(); i++)
+    {
+        ware_jsons.push_back(this->wares[i].first->save());
+    }
+    json_set_array(save, merchant::schema.items, ware_jsons);
+
+    std::vector<json> cost_jsons;
+    for (int i = 0; i < this->wares.length(); i++)
+    {
+        cost_jsons.push_back(this->wares[i].second->save());
+    }
+    json_set_array(save, merchant::schema.costs, cost_jsons);
+
+    return save;
+}
+
+void merchant::load(json from)
+{
+    std::vector<json> ware_jsons;
+    json_read_array(from, merchant::schema.items, ware_jsons);
+    std::vector<json> cost_jsons;
+    json_read_array(from, merchant::schema.costs, cost_jsons);
+    for (int i = 0; i < this->wares.length(); i++)
+    {
+        this->wares[i].first->load(ware_jsons[i]);
+        this->wares[i].second->load(cost_jsons[i]);
     }
 }
 
@@ -618,7 +664,7 @@ player::~player()
 #pragma endregion
 
 #pragma region enemy
-auto enemy::registry = std::vector<std::pair<enemy_ctor, int>>{};
+std::map<int, enemy_ctor> enemy::registry{};
 std::map<int, std::vector<enemy_ctor>> enemy::buckets{};
 std::vector<enemy_ctor> enemy::bosses{};
 
@@ -638,7 +684,7 @@ void enemy::registrate(std::vector<enemy_ctor> registrees)
     {
         enemy *inst = registree(origin);
         int value = inst->value;
-        enemy::registry.push_back({registree, value});
+        enemy::registry.emplace(inst->get_typeid(), registree);
 
         bool placed = false;
         for (auto &[max, list] : enemy::buckets)
@@ -739,6 +785,11 @@ void enemy::drop(game *game_obj)
     }
 }
 
+int enemy::get_typeid()
+{
+    throw "";
+}
+
 enemy::~enemy()
 {
     delete this->weapon;
@@ -758,6 +809,11 @@ void dagger_man::drop(game *game_obj)
     game_obj->drop(this->weapon);
 }
 
+int dagger_man::get_typeid()
+{
+    return dagger_man::type_id;
+}
+
 recruit::recruit(point_2d loc) : enemy("Recruit", "recruit_0", option_scale_bmp(0.6, 0.5), loc, 14, 12, 30, 10, make_attrmap({{attribute::BOIL_INCREASE, 10}, {attribute::BOIL_REDUCTION, 30}, {attribute::MELEE_DEF, 20}}))
 {
     this->weapon->alter(pike, 1);
@@ -770,10 +826,20 @@ void recruit::drop(game *game_obj)
     game_obj->drop(this->weapon);
 }
 
+int recruit::get_typeid()
+{
+    return recruit::type_id;
+}
+
 glorngus::glorngus(point_2d loc) : enemy("Glorngus", "glorngus_0", option_scale_bmp(0.6, 0.6), loc, 20, 0, 5, 15, make_attrmap({{attribute::BOIL_INCREASE, 3}, {attribute::BOIL_REDUCTION, 30}}))
 {
     this->weapon->alter(glorngus_fists, 1);
     this->sync_attributes();
+}
+
+int glorngus::get_typeid()
+{
+    return glorngus::type_id;
 }
 
 gravedigger::gravedigger(point_2d loc) : enemy("Gravedigger", "gravedigger_0", option_scale_bmp(0.6, 0.6), loc, 12, 25, 50, 20, make_attrmap({{attribute::BOIL_INCREASE, 15}, {attribute::BOIL_REDUCTION, 30}}))
@@ -805,6 +871,11 @@ void gravedigger::drop(game *game_obj)
 {
     enemy::drop(game_obj);
     game_obj->drop(this->weapon);
+}
+
+int gravedigger::get_typeid()
+{
+    return gravedigger::type_id;
 }
 
 nightwatch::nightwatch(point_2d loc) : enemy("Nightwatch", "nightwatch_0", option_scale_bmp(0.6, 0.6), loc, 25, 30, 55, 25, make_attrmap({{attribute::BOIL_INCREASE, 10}, {attribute::BOIL_REDUCTION, 30}}))
@@ -840,16 +911,31 @@ void nightwatch::drop(game *game_obj)
     }
 }
 
+int nightwatch::get_typeid()
+{
+    return nightwatch::type_id;
+}
+
 amalgam::amalgam(point_2d loc) : enemy("Amalgam", "amalgam_0", option_scale_bmp(0.7, 0.7), loc, 40, 0, 50, 30, make_attrmap({{attribute::BOIL_INCREASE, 5}, {attribute::BOIL_REDUCTION, 10}}))
 {
     this->weapon->alter(amalgam_strike, 1);
     this->sync_attributes();
 }
 
+int amalgam::get_typeid()
+{
+    return amalgam::type_id;
+}
+
 glorngus_evolved::glorngus_evolved(point_2d loc) : enemy("Glorngus Evolved", "glorngus_evolved_0", option_scale_bmp(0.6, 0.6), loc, 40, 0, 15, 35, make_attrmap({{attribute::BOIL_INCREASE, 9}, {attribute::BOIL_REDUCTION, 60}}))
 {
     this->weapon->alter(glorngus_fists_evolved, 1);
     this->sync_attributes();
+}
+
+int glorngus_evolved::get_typeid()
+{
+    return glorngus_evolved::type_id;
 }
 
 felknight::felknight(point_2d loc) : enemy("Felknight", "felknight_0", option_scale_bmp(0.5, 0.5), loc, 50, 50, 80, 40, make_attrmap({{attribute::MELEE_DEF, 33}, {attribute::RANGED_DEF, 33}, {attribute::BOIL_INCREASE, 12}, {attribute::BOIL_REDUCTION, 40}}))
@@ -864,6 +950,11 @@ void felknight::drop(game *game_obj)
     game_obj->drop(this->weapon);
 }
 
+int felknight::get_typeid()
+{
+    return felknight::type_id;
+}
+
 glorngus_ex::glorngus_ex(point_2d loc) : enemy("Glorngus EX", "glorngus_ex_0", option_scale_bmp(0.6, 0.6), loc, 50, 40, 75, 45, make_attrmap({{attribute::MELEE_DEF, 50}, {attribute::RANGED_DEF, 25}, {attribute::BOIL_INCREASE, 15}, {attribute::BOIL_REDUCTION, 100}}))
 {
     this->weapon->alter(glorngus_claymore::instance(), 1);
@@ -875,6 +966,12 @@ void glorngus_ex::drop(game *game_obj)
     enemy::drop(game_obj);
     game_obj->drop(this->weapon);
 }
+
+int glorngus_ex::get_typeid()
+{
+    return glorngus_ex::type_id;
+}
+
 #pragma endregion
 
 /**

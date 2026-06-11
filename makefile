@@ -4,7 +4,7 @@ HEADERS=entities.h screens.h game.h ui.h items.h
 # name of final .exe
 EXE=lineboil
 #testing files
-CONCAT=concatenated.cpp
+CONCAT=concat.cpp
 CONCAT_EXE=lineboil_concat
 #version of C++ standard to use
 STD=c++26

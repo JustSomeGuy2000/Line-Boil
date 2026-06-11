@@ -475,7 +475,6 @@ void game::spawn_enemies()
 {
     int target = 5 + 5 * this->layer;
     int current_x = 50;
-    // this->enemies.add(new felknight(point_at(current_x, 140)));
 
     while (target > 0)
     {
@@ -492,6 +491,18 @@ void game::spawn_enemies()
                 break;
             }
         }
+    }
+}
+
+void game::spawn_enemies(std::vector<double> ids)
+{
+    int current_x = 50;
+
+    for (int id : ids)
+    {
+        enemy *to_add = enemy::registry[id](point_at(current_x, 140));
+        current_x += to_add->hitbox.width;
+        this->enemies.add(to_add);
     }
 }
 
@@ -522,6 +533,7 @@ void game::end_room()
             {
                 node->next[j]->active = true;
             }
+            node->active = false;
             break;
         }
         else
@@ -571,7 +583,7 @@ void game::next_attack()
     }
 }
 
-void game::start_room(room *next)
+void game::start_room(room *next, bool generate)
 {
     this->current_room->current = false;
     this->current_room = next;
@@ -587,20 +599,30 @@ void game::start_room(room *next)
     case room_type::BATTLE_LV2:
     case room_type::BATTLE_LV3:
     case room_type::BATTLE_LV4:
-        this->spawn_enemies();
+        if (generate)
+        {
+            this->spawn_enemies();
+        }
         this->change_screen(game_overlay::instance(), battle_upper::instance(), battle_lower::instance());
         break;
     case room_type::MERCHANT:
-        this->npcs.add(new merchant());
+        if (generate)
+        {
+            this->npcs.add(new merchant());
+        }
         this->change_screen(game_overlay::instance(), npc_upper::instance(), battle_lower::instance());
         break;
     case room_type::CHEST:
-        this->npcs.add(new chest());
+        if (generate)
+        {
+            this->npcs.add(new chest());
+        }
         this->change_screen(game_overlay::instance(), npc_upper::instance(), battle_lower::instance());
         break;
     case room_type::BOSS:
         break;
     }
+    this->save();
 }
 
 void game::drop(item_stack *stack)
@@ -674,6 +696,19 @@ void game::save()
 
     json_set_number(save, game::schema.current_room, this->current_room->id);
     json_set_object(save, game::schema.player, this->player_object->save());
+
+    std::vector<double> enemy_ids;
+    for (int i = 0; i < this->enemies.length(); i++)
+    {
+        enemy_ids.push_back(this->enemies[i]->get_typeid());
+    }
+    json_set_array(save, game::schema.enemies, enemy_ids);
+
+    if (this->npcs.length() > 0)
+    {
+        json_set_object(save, game::schema.npc_info, this->npcs[0]->save());
+    }
+
     json_to_file(save, "save.json");
     free_json(save);
 }
@@ -738,6 +773,27 @@ void game::load()
     {
         this->player_object->load(json_read_object(save, game::schema.player));
     }
+
+    if (json_has_key(save, game::schema.enemies))
+    {
+        std::vector<double> enemy_ids;
+        json_read_array(save, game::schema.enemies, enemy_ids);
+        this->spawn_enemies(enemy_ids);
+    }
+
+    if (this->current_room->type == room_type::types::CHEST)
+    {
+        chest *new_chest = new chest();
+        new_chest->load(json_read_object(save, game::schema.npc_info));
+        this->npcs.add(new_chest);
+    }
+    else if (this->current_room->type == room_type::types::MERCHANT)
+    {
+        merchant *new_merchant = new merchant();
+        new_merchant->load(json_read_object(save, game::schema.npc_info));
+        this->npcs.add(new_merchant);
+    }
+
     free_json(save);
 }
 

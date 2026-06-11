@@ -198,10 +198,12 @@ struct game_schema
 {
     const string palette = "palette";           // palette name
     const string complete = "complete";         // bool, gameplay-related fields won't be present if true
-    const string map = "map";                   // array of arrays of room jsons
-    const string ground = "ground";             // array of item_stack jsons
+    const string map = "map";                   // list of of room jsons
+    const string ground = "ground";             // list of item_stack jsons
     const string current_room = "current_room"; // int (id)
     const string player = "player";             // player json
+    const string enemies = "enemies";           // list of ints (enemy type_ids)
+    const string npc_info = "npc_info";         // object representing the current npc (there's only ever one at a time)
 };
 
 /**
@@ -305,6 +307,8 @@ public:
      */
     void spawn_enemies();
 
+    void spawn_enemies(std::vector<double> ids);
+
     /**
      * Remove and delete an entity from the enemy list.
      *
@@ -331,8 +335,9 @@ public:
      * Set the current room and transition into it, performing all associated setup actions and content generation.
      *
      * @param next Room to set as next.
+     * @param generate Whether to generate room content. Otherwise, values the game already ahs stored will be used (for preserving data from `load`).
      */
-    void start_room(room *next);
+    void start_room(room *next, bool generate = true);
 
     /**
      * Drop an item onto the ground. Also clears the original stack if successful. Burns the stack if unsuccessful.

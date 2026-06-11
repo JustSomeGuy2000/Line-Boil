@@ -92,6 +92,16 @@ public:
      * @param game_obj Pointer providing access to the game.
      */
     virtual void render(game *game_obj);
+    /**
+     * @returns A JSON object that `load` can recreate this from.
+     */
+    virtual json save() = 0;
+    /**
+     * Recreate this from a JSON object of the proper schema.
+     *
+     * @param from The object to use.
+     */
+    virtual void load(json from) = 0;
     virtual ~npc();
 };
 
@@ -108,11 +118,20 @@ public:
      * @param game_object A pointer giving access to the game.
      */
     void update(game *game_obj) override;
+    json save() override;
+    void load(json from) override;
     virtual ~chest() override;
+};
+
+struct merchant_schema
+{
+    const string items = "items"; // array of item_stack JSONs
+    const string costs = "costs"; // array of item_stack JSONs
 };
 
 class merchant : public npc
 {
+    static struct merchant_schema schema;
     static const int WARE_COUNT = 8;
 
     point_2d menu_render_at;
@@ -134,6 +153,8 @@ public:
      * @param game_obj Pointer providing access to the game.
      */
     virtual void render(game *game_obj) override;
+    json save() override;
+    void load(json from) override;
     ~merchant();
 };
 
@@ -333,6 +354,8 @@ public:
 
 class enemy : public entity
 {
+    static const int type_id = 0;
+
 protected:
     item_stack *weapon;
     int info_size;
@@ -346,8 +369,8 @@ public:
     static const int BUCKET_WIDTH = 5;
     static const int BUCKET_COUNT = 9;
     static constexpr double STDEV = 5;
-    // Associates each enemy to its value.
-    static std::vector<std::pair<enemy_ctor, int>> registry;
+    // Associates each enemy type to its id.
+    static std::map<int, enemy_ctor> registry;
     // Assigns a bucket upper bound to a list of enemies.
     static std::map<int, std::vector<enemy_ctor>> buckets;
     static std::vector<enemy_ctor> bosses;
@@ -405,12 +428,30 @@ public:
      * @param game_obj Access to the game object.
      */
     virtual void drop(game *game_obj);
+    /**
+     * Get the type_id of this enemy. Even though it is public, the game cannot see it since:
+     *
+     * 1) type_id has to be static, since all instances of the enemy have the same one.
+     *
+     * 2) The game always works with enemy*, not its subclasses.
+     *
+     * 3) Because of C++'s moronic static resolution rules and refusal to consider types objects, accessing type_id through that will return enemy::type_id.
+     *
+     * 4) Thus, it must be given by the enemy itself through overriden functions, which will dispatch to the proepr version at runtime.
+     *
+     * And yes, this must be duplicated for every enemy class otherwise static resolution will bite you in the arse, and there isn't any `static virtual`.
+     *
+     * @returns The type_id of the type of the enemy.
+     */
+    virtual int get_typeid();
 
     ~enemy();
 };
 
 class dagger_man : public enemy
 {
+    static const int type_id = 1;
+
 public:
     dagger_man(point_2d loc);
     /**
@@ -419,10 +460,13 @@ public:
      * @param game_obj Access to the game object.
      */
     void drop(game *game_obj) override;
+    int get_typeid() override;
 };
 
 class recruit : public enemy
 {
+    static const int type_id = 2;
+
 public:
     recruit(point_2d loc);
     /**
@@ -431,16 +475,22 @@ public:
      * @param game_obj Access to the game object.
      */
     void drop(game *game_obj) override;
+    int get_typeid() override;
 };
 
 class glorngus : public enemy
 {
+    static const int type_id = 3;
+
 public:
     glorngus(point_2d loc);
+    int get_typeid() override;
 };
 
 class gravedigger : public enemy
 {
+    static const int type_id = 4;
+
 public:
     gravedigger(point_2d loc);
     /**
@@ -456,10 +506,12 @@ public:
      * @param game_obj Access to the game object.
      */
     void drop(game *game_obj) override;
+    int get_typeid() override;
 };
 
 class nightwatch : public enemy
 {
+    static const int type_id = 5;
 
 public:
     nightwatch(point_2d loc);
@@ -476,22 +528,31 @@ public:
      * @param game_obj Access to the game object.
      */
     void drop(game *game_obj) override;
+    int get_typeid() override;
 };
 
 class amalgam : public enemy
 {
+    static const int type_id = 6;
+
 public:
     amalgam(point_2d loc);
+    int get_typeid() override;
 };
 
 class glorngus_evolved : public enemy
 {
+    static const int type_id = 7;
+
 public:
     glorngus_evolved(point_2d loc);
+    int get_typeid() override;
 };
 
 class felknight : public enemy
 {
+    static const int type_id = 8;
+
 public:
     felknight(point_2d loc);
     /**
@@ -500,10 +561,13 @@ public:
      * @param game_obj Access to the game object.
      */
     void drop(game *game_obj) override;
+    int get_typeid() override;
 };
 
 class glorngus_ex : public enemy
 {
+    static const int type_id = 9;
+
 public:
     glorngus_ex(point_2d loc);
     /**
@@ -512,4 +576,5 @@ public:
      * @param game_obj Access to the game object.
      */
     void drop(game *game_obj) override;
+    int get_typeid() override;
 };

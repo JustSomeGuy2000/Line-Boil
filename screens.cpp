@@ -80,7 +80,7 @@ start_screen::start_screen() : screen(screen_type::FULL)
         game_obj->clear();
         game_obj->reset();
         game_obj->load();
-        game_obj->start_room(game_obj->current_room); }, "Continue");
+        game_obj->start_room(game_obj->current_room, false); }, "Continue");
     this->title_opts = option_scale_bmp(0.7, 0.7);
     this->settings_button = new default_btn(point_at(210, 590), []()
                                             { game::instance()->change_screen(settings_screen::instance()); }, "Settings");
@@ -308,8 +308,7 @@ pause_screen::pause_screen() : screen(screen_type::FULL)
                                           { game::instance()->back(); }, "Resume", point_at(270, 225));
     this->saq_button = new default_btn(rectangle_from(220, 400, 262, 112), []()
                                        { 
-                                game *inst = game::instance();
-                                inst->save(); 
+                                game *inst = game::instance(); 
                                 inst->clear();
                                 inst->reset();
                                 inst->change_screen(start_screen::instance()); }, "Save & Quit", point_at(245, 425), 40);
